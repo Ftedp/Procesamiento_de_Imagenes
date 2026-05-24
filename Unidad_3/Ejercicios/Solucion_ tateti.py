@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 #
 # PASO A PASO:
 #
-# 1. DETECCIÓN DE BORDES
+# 1. DETECCIÓN DE BORDES (con Canny)
 #    Se aplica GaussianBlur para reducir el ruido y luego Canny para obtener
 #    una imagen binaria con los bordes de la imagen.
 #
