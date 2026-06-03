@@ -218,6 +218,7 @@ plt.show(block=False)
 #Imagen 7 falla porque candidato 0(falso positivo) esta mas bajo que candidato 2(patente).
 # Ajustar parametro
 #Imagen 11 falla ratio y contornos (solo tiene dos, pero si bajo mas el parametro introdzco ruido)
+#Falta identificar cada letra de la patente.
 #=====================================================================================
 
     # Tomamos el crop del ganador actual
