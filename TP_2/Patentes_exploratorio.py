@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 #----------------------------------IMG----------------------------------------------
 #-----------------------------------------------------------------------------------
 
-img = cv2.imread('img_12.jpg')
+img = cv2.imread('img_5.jpg')
 img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
@@ -210,16 +210,27 @@ plt.show(block=False)
 
 #=====================================================================================
 #=====================================================================================
-# SI -> 1,2,3,4,8,10,12. count -> 7
-# NO -> 5,6,7,9,11. count -> 5
+# SI -> 1,2,3,4,7,8,9,10,11,12. count ->10
+# NO -> 5,6. count -> 2
 #Imagen 5 hay que solucionar que la patente no entra directamente en los candidatos
 #por ende ninguna discriminacion funciona.
 #Imagen 6 pasa lo mismo.
-#Imagen 7 falla porque candidato 0(falso positivo) esta mas bajo que candidato 2(patente).
-# Ajustar parametro
 #Imagen 11 falla ratio y contornos (solo tiene dos, pero si bajo mas el parametro introdzco ruido)
 #Falta identificar cada letra de la patente.
 #=====================================================================================
+#Imagen 12 -> 7 caracteres
+#Imagen 11 -> 7 caracteres
+#Imagen 10 ----------------------> 3 caracteres
+#Imagen 9 -> 7 caracteres
+#Imagen 8 -> 7 caracteres
+#Imagen 7 ----------------------> si patente, no caracteres
+#Imagen 6 -> no detecta patente
+#Imagen 5 -> no detecta patente
+#Imagen 4 -> 7 caracteres
+#Imagen 3 -> 7 caracteres
+#Imagen 2 -> 7 caracteres
+#Imagen 1 -> 7 caracteres
+
 
     # Tomamos el crop del ganador actual
 x, y, w, h, ratio, area_rel, cnt = candidatos_sorted[idx_ganador]
@@ -248,7 +259,7 @@ for c in contornos_crop:
         continue
     area_rel = (wc * hc) / roi_area
     ratio_c = hc / wc  # más alto que ancho → ratio > 1
-    if 1.2 < ratio_c < 2.5 and 0.04 < area_rel < 0.20:
+    if 1.2 < ratio_c < 2.5 and 0.03 < area_rel < 0.20: #Umbral antiguo a_rel = 0.4
         caracteres_validos.append((xc, yc, wc, hc))
         cv2.rectangle(crop_debug2, (xc, yc), (xc+wc, yc+hc), (0, 255, 0), 1)
 
@@ -259,3 +270,39 @@ plt.imshow(crop_debug2)
 plt.title(f'Caracteres válidos ({len(caracteres_validos)})')
 plt.axis('off')
 plt.show(block=False)
+
+
+#------------------------------------------------------------
+
+#------------------------------------------------------------
+# Convertimos a HSV para detectar el azul de la franja superior
+img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+# Rango de azul en HSV: H entre 100 y 130, S y V altos
+azul_bajo = np.array([100, 80, 50])
+azul_alto = np.array([130, 255, 255])
+
+mascara_azul = cv2.inRange(img_hsv, azul_bajo, azul_alto)
+
+# Verificamos sobre cada candidato
+#---------------------------Discriminacion por franja azul superior---------------------------
+MARGEN_AZUL       = 30
+UMBRAL_SOLAP_AZUL = 0.25
+PROPORCION_FRANJA = 0.20
+
+img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+azul_bajo = np.array([100, 80, 50])
+azul_alto = np.array([130, 255, 255])
+mascara_azul = cv2.inRange(img_hsv, azul_bajo, azul_alto)
+
+print(f"\n{'ID':>3} {'solap_azul':>11} {'puntos':>7}")
+print("-" * 26)
+
+for i, (x, y, w, h, ratio, area_rel, cnt) in enumerate(candidatos_sorted):
+    h_franja = max(1, int(h * PROPORCION_FRANJA))
+    roi_azul = mascara_azul[y:y+h_franja, x:x+w]
+    solap_azul = roi_azul.sum() / (255 * w * h_franja)
+    if solap_azul > UMBRAL_SOLAP_AZUL:
+        puntajes[i] += 1
+    print(f"{i:>3} {solap_azul:>11.3f} {puntajes[i]:>7}")
+
